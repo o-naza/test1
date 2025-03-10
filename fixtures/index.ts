@@ -1,6 +1,6 @@
 import { test as base } from "@playwright/test";
 import { WebApp } from "../app";
-import { user } from "../test-data/test-user";
+import { createUser } from "../test-data/test-user";
 
 
 export const test = base.extend<{ logs: any }>({
@@ -46,7 +46,7 @@ export const newUserLogin = application.extend<{
   newUser: any;
 }>({
   newUser: async ({ app,page }, use) => {
-    const createdUserResponse = await app.api.auth.registerNewUser(user);
+    const createdUserResponse = await app.api.auth.registerNewUser(createUser());
     const setCookieHeader = createdUserResponse.headers()['set-cookie'];
     
     if (!setCookieHeader) {
