@@ -1,14 +1,14 @@
-import { ProfileForm } from "./../app/user_app_components/profile_form";
 import { createUser } from "./../test-data/test-user";
 import { newUserLogin, test } from "../fixtures";
 import { expect } from "@playwright/test";
 import { WebApp } from "../app";
 
 test("User can register a new acount", async ({ page, logs }) => {
+  const user = createUser();
   const app = new WebApp(page);
   await app.homePage.open();
   await app.homePage.headerMenu.openRegistrationForm();
-  await app.homePage.headerMenu.registrationForm.fillUserData(createUser());
+  await app.homePage.headerMenu.registrationForm.fillUserData(user);
   await app.homePage.headerMenu.registrationForm.checkContry();
   await app.homePage.headerMenu.registrationForm.checkCurrency();
   await app.homePage.headerMenu.registrationForm.eighteenYearsAgreement(true);
@@ -16,7 +16,7 @@ test("User can register a new acount", async ({ page, logs }) => {
   await app.homePage.headerMenu.registrationForm.createUserAccountBtn();
   await app.homePage.headerMenu.openSideMenu();
   await app.homePage.headerMenu.sideMenu.openProfileForm();
-  await app.homePage.headerMenu.sideMenu.profileForm.isCorrectUser(createUser());
+  await app.homePage.headerMenu.sideMenu.profileForm.isCorrectUser(user);
 });
 
 newUserLogin("New user can edit profile settings", async ({ page, logs, newUser, app }) => {
