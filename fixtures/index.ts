@@ -47,7 +47,6 @@ export const newUserLogin = application.extend<{
 }>({
   newUser: async ({ app,page }, use) => {
     const createdUserResponse = await app.api.auth.registerNewUser(user);
-    console.log(createdUserResponse);
     const setCookieHeader = createdUserResponse.headers()['set-cookie'];
     
     if (!setCookieHeader) {
