@@ -30,7 +30,7 @@ export default defineConfig({
       username: "jnszfpbb",
       password: "xjvb14zx9cdg",
     },
-    trace: "on-first-retry",
+    trace: "on" ,
   },
 
   projects: [
