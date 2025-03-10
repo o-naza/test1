@@ -7,7 +7,7 @@ on:
     branches: [main, master]
   
 jobs:
-  
+
   setup-and-run-tests:
     timeout-minutes: 15
     runs-on: ubuntu-20.04
@@ -16,63 +16,64 @@ jobs:
       matrix:
         shard: [1/2, 2/2]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - name: Install dependencies
-        run: npm ci
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 22
+    - name: Install dependencies
+      run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+    - name: Install Playwright browsers
+      run: npx playwright install chromium --with-deps
 
-      - name: Run Playwright tests
-        run: npx playwright test --shard ${{ matrix.shard }}
+    - name: Run Playwright tests
+      run: npx playwright test --shard ${{ matrix.shard }}
 
-      - name: Upload test report as artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports
-          path: playwright-report
-          retention-days: 14
-  
-  merge-reports-and-deploy:
+    - name: Upload blob report to GitHub Actions Artifacts
+      if: always()
+      uses: actions/upload-artifact@v4  
+      with:
+        name: merged-reports-as-blob
+        path: blob-report
+        retention-days: 14
+
+  merge-reports-and-upload:
     if: always()
     needs: [setup-and-run-tests]
     runs-on: ubuntu-20.04
 
     outputs:
-      timestamp: ${{ steps.timestampid.outputs.timestamp }}
+        timestamp: ${{ steps.timestampid.outputs.timestamp }}
 
     steps:
 
-      - name: Set a timestamp
-        id: timestampid
-        run: echo "timestamp=$(date --utc +%Y%m%d_%H%M%SZ)" >> "$GITHUB_OUTPUT"
+    - name: Set a timestamp
+      id: timestampid
+      run: echo "timestamp=$(date --utc +%Y%m%d_%H%M%SZ)" >> "$GITHUB_OUTPUT" 
 
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - name: Install dependencies
-        run: npm ci
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 22
+    - name: Install dependencies
+      run: npm ci
 
-      - name: Download test reports from GitHub Actions artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: test-reports
-          path: downloaded-reports
+    # Download the reports uploaded previously
+    - name: Download blob reports from GitHub Actions Artifacts
+      uses: actions/download-artifact@v4  
+      with:
+        name: merged-reports-as-blob
+        path: downloaded-merged-reports-as-blob
 
-      - name: Merge the reports into a single HTML file
-        run: npx playwright merge-reports --reporter html ./downloaded-reports
+    - name: Merge the blobs into one single HTML Report
+      run: npx playwright merge-reports --reporter html ./downloaded-merged-reports-as-blob
 
-      - name: Deploy report to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GH_PAGES_TOKEN }}
-          publish_dir: ./playwright-report
-          destination_dir: ${{ steps.timestampid.outputs.timestamp }}
+    - name: Push the new files to github pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GH_PAGES_TOKEN }}
+        publish_dir: ./playwright-report
+        destination_dir: ${{ steps.timestampid.outputs.timestamp }}
 
-      - name: Add report URL to the summary
-        run: echo "### Test results (link available after 20 secs) - https://${{ github.repository_owner }}.github.io/test1/${{ steps.timestampid.outputs.timestamp }}/index.html" >> $GITHUB_STEP_SUMMARY 
+    - name: Write URL in summary
+      run: echo "### Test results (link available after 20 secs) - https://${{ github.repository_owner }}.github.io/test1/${{ steps.timestampid.outputs.timestamp }}/index.html" >> $GITHUB_STEP_SUMMARY
